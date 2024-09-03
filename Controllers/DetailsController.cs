@@ -102,84 +102,127 @@ namespace task5.Controllers
         }
 
 
-        //[HttpGet]
-        //public IActionResult GetDetailsCities(string citynames, int pageNumber = 1, int pageSize = 10)
-        //{
-        //    var cities = GetCitiesByState(citynames); 
-        //    var pagedCities = cities.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-
-        //    return Json(pagedCities);
-        //}
         [HttpGet]
         public ActionResult GetDetails(
-    string stateName,
-    string searchString,
-    string cityNames,
-    DateTime? startDate,
-    DateTime? endDate,
-    int? pageNumber,
-    int pageSize = 10)
+     string searchString,
+     string cityNames,
+     DateTime? startDate,
+     DateTime? endDate,
+     int? draw, 
+     int? start, 
+     int? length) 
         {
-            
-            int currentPage = pageNumber ?? 1;
-            pageSize = pageSize > 0 ? pageSize : 10;
-
-           
             int totalCount;
             int totalPages;
 
-          
+            int pageSize = length ?? 10; 
+            int pageNumber = (start ?? 0) / pageSize + 1; 
+
             IEnumerable<Details> model;
 
-           
-            if (!string.IsNullOrEmpty(stateName))
-            {
-                var cities = _repository.GetCitiesByState(stateName).ToList();
-                ViewBag.States = _repository.GetStates();
-                return Json(cities, JsonRequestBehavior.AllowGet);
-            }
-
-           
             model = _repository.GetPagedData(
                 pageSize,
-                currentPage,
+                pageNumber,
                 searchString,
                 cityNames,
                 startDate,
                 endDate,
                 out totalCount
             ).ToList();
-          //  model = _repository.GetPagedData1(pageSize, currentPage,out totalCount).ToList();
 
-           
             totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
-          
-            var result = new PaginatedResult
+            var result = new
             {
-                Det = model,
-                TotalPages = totalPages,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                CurrentPage = currentPage
+                draw = draw ?? 1, 
+                recordsTotal = totalCount,
+                recordsFiltered = totalCount,
+                data = model.Select(d => new
+                {
+                    d.Name,
+                    d.Email,
+                    d.Mobile,
+                    d.StateName,
+                    d.CityName,
+                    CreatedOn = d.CreatedOn.ToString("dd/MM/yyyy"),
+                    d.Id
+                })
             };
 
-         
-            if (!string.IsNullOrEmpty(cityNames) || !string.IsNullOrEmpty(searchString) || startDate.HasValue || endDate.HasValue)
-            {
-                return Json(result, JsonRequestBehavior.AllowGet);
-            }
-
-           
-            ViewBag.TotalCount = totalCount;
-            ViewBag.PageSize = pageSize;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.CurrentPage = currentPage;
-            ViewBag.States = _repository.GetStates();
-
-           
-            return View(model);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
+
+
+        /* [HttpGet]
+         public ActionResult GetDetails(
+     string stateName,
+     string searchString,
+     string cityNames,
+     DateTime? startDate,
+     DateTime? endDate,
+     int? pageNumber,
+     int pageSize = 3)
+         {
+
+             int currentPage = pageNumber ?? 1;
+             pageSize = pageSize > 0 ? pageSize : 3;
+
+
+             int totalCount;
+             int totalPages;
+
+
+             IEnumerable<Details> model;
+
+
+             if (!string.IsNullOrEmpty(stateName))
+             {
+                 var cities = _repository.GetCitiesByState(stateName).ToList();
+                 ViewBag.States = _repository.GetStates();
+                 return Json(cities, JsonRequestBehavior.AllowGet);
+             }
+
+
+             model = _repository.GetPagedData(
+                 pageSize,
+                 currentPage,
+                 searchString,
+                 cityNames,
+                 startDate,
+                 endDate,
+                 out totalCount
+             ).ToList();
+
+
+
+             totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+
+             var result = new PaginatedResult
+             {
+                 Det = model,
+                 TotalPages = totalPages,
+                 PageSize = pageSize,
+                 TotalCount = totalCount,
+                 CurrentPage = currentPage
+             };
+
+
+             if (!string.IsNullOrEmpty(cityNames) || !string.IsNullOrEmpty(searchString) || startDate.HasValue && endDate.HasValue)
+             {
+                 return Json(result, JsonRequestBehavior.AllowGet);
+             }
+
+
+             ViewBag.TotalCount = totalCount;
+             ViewBag.PageSize = pageSize;
+             ViewBag.TotalPages = totalPages;
+             ViewBag.CurrentPage = currentPage;
+             ViewBag.States = _repository.GetStates();
+
+
+             return View(model);
+         }*/
 
 
         /*  [HttpGet]
